@@ -18,6 +18,12 @@ label{display:block;font-size:13px;font-weight:750;margin-bottom:6px}input{width
 button{border:0;border-radius:11px;padding:12px 18px;font:inherit;font-weight:800;cursor:pointer;transition:.18s ease}button:disabled{cursor:not-allowed;opacity:.5}.btn-primary{background:linear-gradient(135deg,var(--magenta-dark),var(--magenta));color:#fff;box-shadow:0 8px 18px rgba(210,10,124,.24)}.btn-secondary{background:#edf1f6;color:var(--ink)}.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.summary-table{width:100%;border-collapse:collapse}.summary-table th,.summary-table td{padding:11px;border-bottom:1px solid var(--border);text-align:left}.summary-table th{background:rgba(66,185,232,.12);color:#15537a}small{color:var(--muted)}
 .footer-note{max-width:1080px;margin:0 auto 24px;padding:0 16px}.footer-inner{background:linear-gradient(135deg,var(--magenta-dark),var(--magenta));color:#fff;border-radius:16px;padding:15px 18px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.footer-inner strong{color:var(--lime)}
 .loading{opacity:.65;pointer-events:none}.status-line{font-size:13px;margin-top:10px;color:var(--muted)}
+.save-state{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);margin-right:auto}
+.save-dot{width:9px;height:9px;border-radius:50%;background:#b8c0cc;display:inline-block}
+.save-state.saving .save-dot{background:var(--cyan);animation:pulse 1s infinite}
+.save-state.saved{color:var(--success)}.save-state.saved .save-dot{background:var(--success)}
+.save-state.failed{color:var(--danger)}.save-state.failed .save-dot{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
 @media(max-width:900px){.week-grid{grid-template-columns:1fr 1fr}.cost-layout{grid-template-columns:1fr}}@media(max-width:620px){.header-inner{align-items:flex-start}.header-copy{padding-left:14px}header h1{font-size:21px}.info-grid,.week-grid{grid-template-columns:1fr}.brand-logo{width:145px}}
 </style>
 </head>
@@ -29,7 +35,7 @@ button{border:0;border-radius:11px;padding:12px 18px;font:inherit;font-weight:80
   <section class="card"><h2 style="margin-top:0">Anmeldung</h2><p>Bitte erfassen Sie die Anmeldung für Ihr Kind bis Donnerstagabend.</p><div class="info-grid"><div class="person-box"><div class="person-label">Kind</div><div class="person-name" id="childName">Wird geladen …</div></div><div><label for="weekInput">Kalenderwoche *</label><input type="week" id="weekInput" disabled></div></div><div class="status-line" id="loadStatus"></div></section>
   <section class="card"><h2 style="margin-top:0">Tage auswählen</h2><p><small>Für jeden Tag kann separat gewählt werden, ob Ihr Kind teilnimmt und ob das Essen selbst mitgebracht oder geliefert werden soll.</small></p><div class="week-grid" id="weekGrid"></div></section>
   <section class="card"><h2 style="margin-top:0">Kostenübersicht</h2><div class="cost-layout"><div class="price-box"><div class="price-row"><span>Betreuung</span><strong id="careTotal">CHF 0.00</strong></div><div class="price-row"><span>Gelieferte Essen</span><strong id="foodTotal">CHF 0.00</strong></div><div class="price-row"><span>Selbst mitgebracht</span><strong>CHF 0.00</strong></div><div class="price-row price-total"><span>Total pro Woche</span><strong id="grandTotal">CHF 0.00</strong></div></div><div class="week-total-box"><span>Wochentotal</span><strong id="weekTotalLarge">CHF 0.00</strong><small style="color:#fff;opacity:.85">inkl. Betreuung und gelieferte Essen</small></div></div><p><small>Pro angemeldetem Tag werden CHF 5.00 Betreuung verrechnet. Ein geliefertes Essen kostet zusätzlich CHF 14.00.</small></p></section>
-  <section class="card"><h2 style="margin-top:0">Zusammenfassung</h2><table class="summary-table"><thead><tr><th>Tag</th><th>Status</th><th>Essen</th><th>Kosten</th></tr></thead><tbody id="summaryBody"></tbody></table><div class="actions"><button class="btn-secondary" id="reloadBtn" disabled>Neu laden</button><button class="btn-primary" id="submitBtn" disabled>Anmeldung speichern</button></div></section>
+  <section class="card"><h2 style="margin-top:0">Zusammenfassung</h2><table class="summary-table"><thead><tr><th>Tag</th><th>Status</th><th>Essen</th><th>Kosten</th></tr></thead><tbody id="summaryBody"></tbody></table><div class="actions"><div id="saveState" class="save-state"><span class="save-dot"></span><span id="saveStateText">Noch nicht gespeichert</span></div><button class="btn-secondary" id="reloadBtn" disabled>Neu laden</button><button class="btn-primary" id="submitBtn" disabled>Anmeldung speichern</button></div></section>
   <div id="confirmation" class="notice success" style="display:none"></div>
 </main>
 <div class="footer-note"><div class="footer-inner"><div><strong>Datenschutz:</strong> Es werden nur die für die Anmeldung notwendigen Angaben verarbeitet.</div><div>Food Spot Frohheim · Schule Olten bewegt!</div></div></div>
@@ -42,24 +48,131 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{pers
 const token=new URLSearchParams(location.search).get('token');
 const days=[{key:'Mo',label:'Montag'},{key:'Di',label:'Dienstag'},{key:'Mi',label:'Mittwoch'},{key:'Do',label:'Donnerstag'},{key:'Fr',label:'Freitag'}];
 let child=null;
-const app=document.getElementById('app'), systemBox=document.getElementById('systemBox'), weekInput=document.getElementById('weekInput'), submitBtn=document.getElementById('submitBtn'), reloadBtn=document.getElementById('reloadBtn');
+let isSaving=false;
+let lastLoadedSnapshot='';
+const app=document.getElementById('app'), systemBox=document.getElementById('systemBox'), weekInput=document.getElementById('weekInput'), submitBtn=document.getElementById('submitBtn'), reloadBtn=document.getElementById('reloadBtn'), saveState=document.getElementById('saveState'), saveStateText=document.getElementById('saveStateText'), confirmation=document.getElementById('confirmation');
 
 function showSystem(text,type='info'){systemBox.style.display='block';systemBox.className='notice'+(type==='error'?' error':type==='success'?' success':'');systemBox.innerHTML=text}
+function setSaveState(state,text){
+  saveState.className='save-state'+(state?` ${state}`:'');
+  saveStateText.textContent=text;
+}
+function snapshotSelections(){
+  return JSON.stringify(getSelections().map(s=>({date:s.date,present:s.present,food:s.present?s.food:null})));
+}
+function markDirty(){
+  if(!child||isSaving)return;
+  if(snapshotSelections()!==lastLoadedSnapshot){
+    setSaveState('', 'Änderungen noch nicht gespeichert');
+  }else{
+    setSaveState('saved','Alle Angaben gespeichert');
+  }
+}
 function isoWeekString(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);const ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));const w=Math.ceil((((d-ys)/86400000)+1)/7);return `${d.getUTCFullYear()}-W${String(w).padStart(2,'0')}`}
 function nextWeekString(){const d=new Date();d.setDate(d.getDate()+7);return isoWeekString(d)}
 function getWeekDates(weekStr){const [ys,ws]=weekStr.split('-W'),year=+ys,week=+ws;const jan4=new Date(year,0,4),jan4Day=(jan4.getDay()+6)%7;const monday=new Date(year,0,4-jan4Day+(week-1)*7);return days.map((day,i)=>{const date=new Date(monday);date.setDate(monday.getDate()+i);return {...day,date}})}
 function yyyyMmDd(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function deadlineForWeek(weekStr){const monday=getWeekDates(weekStr)[0].date;const deadline=new Date(monday);deadline.setDate(monday.getDate()-4);deadline.setHours(23,59,59,999);return deadline}
 function isClosed(){return !weekInput.value || new Date()>deadlineForWeek(weekInput.value)}
-function updateDeadline(){if(!weekInput.value)return;const deadline=deadlineForWeek(weekInput.value),closed=new Date()>deadline;const box=document.getElementById('deadlineBox');box.style.display='block';box.className='notice '+(closed?'closed':'');box.innerHTML=closed?`<strong>Anmeldefrist abgelaufen.</strong><br>Änderungen für diese Woche waren bis Donnerstag, ${deadline.toLocaleDateString('de-CH')} um 23:59 Uhr möglich.`:`<strong>Anmeldung offen.</strong><br>Änderungen sind bis Donnerstag, ${deadline.toLocaleDateString('de-CH')} um 23:59 Uhr möglich.`;submitBtn.disabled=closed||!child}
-function buildWeekGrid(){const week=weekInput.value;if(!week)return;const dates=getWeekDates(week);document.getElementById('weekGrid').innerHTML=dates.map(({key,label,date})=>`<div class="day-card"><h3>${label}<br><small>${date.toLocaleDateString('de-CH')}</small></h3><label class="switch-row"><input type="checkbox" data-day="${key}" data-date="${yyyyMmDd(date)}" data-type="present"><span>Kind kommt</span></label><div class="food-options" id="food-${key}"><label class="radio-row"><input type="radio" name="food-${key}" value="own"><span><strong>Selbst mitgebracht</strong><br><small>CHF 0.00 Essen</small></span></label><label class="radio-row"><input type="radio" name="food-${key}" value="delivered" checked><span><strong>Geliefertes Essen</strong><br><small>CHF 14.00</small></span></label></div></div>`).join('');document.querySelectorAll('input[data-type="present"]').forEach(cb=>cb.addEventListener('change',e=>{document.getElementById(`food-${e.target.dataset.day}`).classList.toggle('show',e.target.checked);updateTotals()}));document.querySelectorAll('input[type="radio"]').forEach(r=>r.addEventListener('change',updateTotals));updateDeadline();updateTotals()}
+function updateDeadline(){if(!weekInput.value)return;const deadline=deadlineForWeek(weekInput.value),closed=new Date()>deadline;const box=document.getElementById('deadlineBox');box.style.display='block';box.className='notice '+(closed?'closed':'');box.innerHTML=closed?`<strong>Anmeldefrist abgelaufen.</strong><br>Änderungen für diese Woche waren bis Donnerstag, ${deadline.toLocaleDateString('de-CH')} um 23:59 Uhr möglich.`:`<strong>Anmeldung offen.</strong><br>Änderungen sind bis Donnerstag, ${deadline.toLocaleDateString('de-CH')} um 23:59 Uhr möglich.`;submitBtn.disabled=closed||!child||isSaving}
+function buildWeekGrid(){const week=weekInput.value;if(!week)return;const dates=getWeekDates(week);document.getElementById('weekGrid').innerHTML=dates.map(({key,label,date})=>`<div class="day-card"><h3>${label}<br><small>${date.toLocaleDateString('de-CH')}</small></h3><label class="switch-row"><input type="checkbox" data-day="${key}" data-date="${yyyyMmDd(date)}" data-type="present"><span>Kind kommt</span></label><div class="food-options" id="food-${key}"><label class="radio-row"><input type="radio" name="food-${key}" value="own"><span><strong>Selbst mitgebracht</strong><br><small>CHF 0.00 Essen</small></span></label><label class="radio-row"><input type="radio" name="food-${key}" value="delivered" checked><span><strong>Geliefertes Essen</strong><br><small>CHF 14.00</small></span></label></div></div>`).join('');document.querySelectorAll('input[data-type="present"]').forEach(cb=>cb.addEventListener('change',e=>{document.getElementById(`food-${e.target.dataset.day}`).classList.toggle('show',e.target.checked);updateTotals();markDirty()}));document.querySelectorAll('input[type="radio"]').forEach(r=>r.addEventListener('change',()=>{updateTotals();markDirty()}));updateDeadline();updateTotals()}
 function getSelections(){return days.map(({key,label})=>{const cb=document.querySelector(`input[data-day="${key}"][data-type="present"]`);const present=cb?.checked||false;const food=document.querySelector(`input[name="food-${key}"]:checked`)?.value||'delivered';return {key,label,date:cb?.dataset.date,present,food}})}
 function updateTotals(){let care=0,food=0;const body=document.getElementById('summaryBody');body.innerHTML='';getSelections().forEach(s=>{let cost=0;if(s.present){care+=5;cost+=5;if(s.food==='delivered'){food+=14;cost+=14}}const tr=document.createElement('tr');tr.innerHTML=`<td>${s.label}</td><td>${s.present?'Angemeldet':'Abgemeldet'}</td><td>${s.present?(s.food==='own'?'Selbst mitgebracht':'Geliefert'):'–'}</td><td>CHF ${cost.toFixed(2)}</td>`;body.appendChild(tr)});const total=care+food;careTotal.textContent=`CHF ${care.toFixed(2)}`;foodTotal.textContent=`CHF ${food.toFixed(2)}`;grandTotal.textContent=`CHF ${total.toFixed(2)}`;weekTotalLarge.textContent=`CHF ${total.toFixed(2)}`}
-function setBusy(busy,text=''){app.classList.toggle('loading',busy);if(text)document.getElementById('loadStatus').textContent=text}
+function setBusy(busy,text=''){
+  app.classList.toggle('loading',busy);
+  weekInput.disabled=busy||!child;
+  reloadBtn.disabled=busy||!child;
+  if(text)document.getElementById('loadStatus').textContent=text;
+  if(busy) submitBtn.disabled=true;
+  else updateDeadline();
+}
 async function loadChild(){if(!token){showSystem('<strong>Ungültiger Link.</strong><br>Im Link fehlt der persönliche Zugangscode.','error');return}setBusy(true,'Kind wird geladen …');const {data,error}=await sb.rpc('get_foodspot_child',{p_token:token});if(error||!data?.length){console.error(error);showSystem('<strong>Link konnte nicht geöffnet werden.</strong><br>Bitte verwenden Sie den vollständigen Link, den Sie von der Tagesstruktur erhalten haben.','error');setBusy(false,'');return}child=data[0];document.getElementById('childName').textContent=`${child.first_name} ${child.last_name}`;weekInput.disabled=false;reloadBtn.disabled=false;showSystem('<strong>Verbindung hergestellt.</strong> Ihre Angaben werden sicher in der zentralen Datenbank gespeichert.','success');setBusy(false,'');await loadWeek()}
-async function loadWeek(){if(!child||!weekInput.value)return;setBusy(true,'Gespeicherte Anmeldung wird geladen …');buildWeekGrid();const dates=getWeekDates(weekInput.value),from=yyyyMmDd(dates[0].date),to=yyyyMmDd(dates[4].date);const {data,error}=await sb.rpc('get_foodspot_registrations',{p_token:token,p_from:from,p_to:to});if(error){console.error(error);showSystem('<strong>Anmeldung konnte nicht geladen werden.</strong><br>Bitte versuchen Sie es erneut.','error');setBusy(false,'Fehler beim Laden.');return}(data||[]).forEach(r=>{const cb=document.querySelector(`input[data-date="${r.attendance_date}"]`);if(!cb)return;cb.checked=!!r.attending;document.getElementById(`food-${cb.dataset.day}`).classList.toggle('show',!!r.attending);if(r.meal_type){const radio=document.querySelector(`input[name="food-${cb.dataset.day}"][value="${r.meal_type}"]`);if(radio)radio.checked=true}});updateTotals();updateDeadline();setBusy(false,data?.length?'Gespeicherte Angaben geladen.':'Für diese Woche sind noch keine Angaben gespeichert.')}
-async function submitForm(){if(!child||!weekInput.value||isClosed())return;confirmation.style.display='none';submitBtn.disabled=true;setBusy(true,'Anmeldung wird gespeichert …');try{for(const s of getSelections()){const {error}=await sb.rpc('save_foodspot_registration',{p_token:token,p_attendance_date:s.date,p_attending:s.present,p_meal_type:s.present?s.food:null});if(error)throw error}await loadWeek();const sel=getSelections(),careDays=sel.filter(s=>s.present).length,delivered=sel.filter(s=>s.present&&s.food==='delivered').length,own=sel.filter(s=>s.present&&s.food==='own').length,total=careDays*5+delivered*14;confirmation.style.display='block';confirmation.innerHTML=`<strong>Anmeldung erfolgreich gespeichert.</strong><br>${child.first_name} ${child.last_name} wurde für ${careDays} Tag(e) angemeldet. Gelieferte Essen: ${delivered}, selbst mitgebracht: ${own}. Wochentotal: CHF ${total.toFixed(2)}.`;confirmation.scrollIntoView({behavior:'smooth'});showSystem('<strong>Gespeichert.</strong> Die Anmeldung ist in der zentralen Datenbank vorhanden.','success')}catch(err){console.error(err);showSystem(`<strong>Speichern fehlgeschlagen.</strong><br>${err.message||'Bitte versuchen Sie es erneut.'}`,'error')}finally{setBusy(false,'');updateDeadline()}}
-weekInput.value=nextWeekString();weekInput.addEventListener('change',loadWeek);reloadBtn.addEventListener('click',loadWeek);submitBtn.addEventListener('click',submitForm);buildWeekGrid();loadChild();
+async function loadWeek(){
+  if(!child||!weekInput.value)return;
+  confirmation.style.display='none';
+  setBusy(true,'Gespeicherte Anmeldung wird geladen …');
+  setSaveState('saving','Angaben werden geladen …');
+  buildWeekGrid();
+  const dates=getWeekDates(weekInput.value),from=yyyyMmDd(dates[0].date),to=yyyyMmDd(dates[4].date);
+  try{
+    const {data,error}=await sb.rpc('get_foodspot_registrations',{p_token:token,p_from:from,p_to:to});
+    if(error)throw error;
+    (data||[]).forEach(r=>{
+      const cb=document.querySelector(`input[data-date="${r.attendance_date}"]`);
+      if(!cb)return;
+      cb.checked=!!r.attending;
+      document.getElementById(`food-${cb.dataset.day}`).classList.toggle('show',!!r.attending);
+      if(r.meal_type){
+        const radio=document.querySelector(`input[name="food-${cb.dataset.day}"][value="${r.meal_type}"]`);
+        if(radio)radio.checked=true;
+      }
+    });
+    updateTotals();
+    lastLoadedSnapshot=snapshotSelections();
+    setSaveState('saved','Alle Angaben gespeichert');
+    setBusy(false,data?.length?'Gespeicherte Angaben geladen.':'Für diese Woche sind noch keine Angaben gespeichert.');
+  }catch(error){
+    console.error(error);
+    setSaveState('failed','Laden fehlgeschlagen');
+    showSystem('<strong>Anmeldung konnte nicht geladen werden.</strong><br>Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.','error');
+    setBusy(false,'Fehler beim Laden.');
+  }
+}
+async function submitForm(){
+  if(isSaving||!child||!weekInput.value||isClosed())return;
+  const selections=getSelections();
+  confirmation.style.display='none';
+  isSaving=true;
+  submitBtn.disabled=true;
+  setBusy(true,'Anmeldung wird gespeichert …');
+  setSaveState('saving','Speichern läuft …');
+  try{
+    for(const s of selections){
+      const {error}=await sb.rpc('save_foodspot_registration',{
+        p_token:token,
+        p_attendance_date:s.date,
+        p_attending:s.present,
+        p_meal_type:s.present?s.food:null
+      });
+      if(error)throw error;
+    }
+    await loadWeek();
+    const sel=getSelections(),
+      careDays=sel.filter(s=>s.present).length,
+      delivered=sel.filter(s=>s.present&&s.food==='delivered').length,
+      own=sel.filter(s=>s.present&&s.food==='own').length,
+      total=careDays*5+delivered*14;
+    lastLoadedSnapshot=snapshotSelections();
+    setSaveState('saved','Alle Angaben gespeichert');
+    confirmation.style.display='block';
+    confirmation.innerHTML=`<strong>Anmeldung erfolgreich gespeichert.</strong><br>${child.first_name} ${child.last_name} wurde für ${careDays} Tag(e) angemeldet. Gelieferte Essen: ${delivered}, selbst mitgebracht: ${own}. Wochentotal: CHF ${total.toFixed(2)}.`;
+    confirmation.scrollIntoView({behavior:'smooth',block:'center'});
+    showSystem('<strong>Gespeichert.</strong> Die Anmeldung wurde aus der zentralen Datenbank erneut geladen und bestätigt.','success');
+  }catch(err){
+    console.error(err);
+    setSaveState('failed','Speichern fehlgeschlagen');
+    const msg=(err&&err.message)?err.message:'Bitte versuchen Sie es erneut.';
+    showSystem(`<strong>Speichern fehlgeschlagen.</strong><br>${msg}<br><small>Ihre Eingaben bleiben auf dieser Seite erhalten. Bitte versuchen Sie es erneut.</small>`,'error');
+  }finally{
+    isSaving=false;
+    setBusy(false,'');
+    updateDeadline();
+  }
+}
+weekInput.value=nextWeekString();
+weekInput.addEventListener('change',loadWeek);
+reloadBtn.addEventListener('click',loadWeek);
+submitBtn.addEventListener('click',submitForm);
+window.addEventListener('beforeunload',e=>{
+  if(child&&!isSaving&&snapshotSelections()!==lastLoadedSnapshot){
+    e.preventDefault();
+    e.returnValue='';
+  }
+});
+window.addEventListener('offline',()=>showSystem('<strong>Keine Internetverbindung.</strong><br>Bitte stellen Sie die Verbindung wieder her, bevor Sie speichern.','error'));
+window.addEventListener('online',()=>{if(child)showSystem('<strong>Internetverbindung wiederhergestellt.</strong>','success')});
+buildWeekGrid();
+loadChild();
 </script>
 </body>
 </html>
