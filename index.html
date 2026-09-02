@@ -48,10 +48,15 @@ button{border:0;border-radius:11px;padding:12px 18px;font:inherit;font-weight:80
 
     <div id="registerPane" style="display:none">
       <h2>Konto erstellen</h2>
-      <p>Registrieren Sie sich mit der <strong>E-Mail-Adresse, welche bei uns hinterlegt ist</strong>. Nur so kann Ihr Kind automatisch zugeordnet werden.</p>
+      <p>Registrieren Sie sich mit der <strong>E-Mail-Adresse, welche bei uns hinterlegt ist</strong>, und Ihrem persönlichen Aktivierungscode. Nur so kann Ihr Kind automatisch zugeordnet werden.</p>
       <div id="registerBox" class="notice" style="display:none"></div>
       <div class="login-grid">
         <div><label for="registerEmailInput">Hinterlegte E-Mail-Adresse</label><input type="email" id="registerEmailInput" autocomplete="email"></div>
+        <div>
+          <label for="activationCodeInput">Aktivierungscode</label>
+          <input type="text" id="activationCodeInput" autocomplete="one-time-code" placeholder="z. B. F7K9P2" maxlength="20">
+          <div class="helper">Den Aktivierungscode erhalten Sie von der Tagesstruktur.</div>
+        </div>
         <div>
           <label for="registerPasswordInput">Eigenes Passwort</label>
           <input type="password" id="registerPasswordInput" autocomplete="new-password">
@@ -114,31 +119,56 @@ async function submitForm(){if(isSaving||!child||!weekInput.value||isClosed())re
 async function login(){const email=document.getElementById('emailInput').value.trim(),password=document.getElementById('passwordInput').value;if(!email||!password){showLogin('Bitte E-Mail-Adresse und Passwort eingeben.');return}const btn=document.getElementById('loginBtn');btn.disabled=true;try{const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await startApp()}catch(err){console.error(err);showLogin('<strong>Anmeldung fehlgeschlagen.</strong><br>Bitte prüfen Sie E-Mail-Adresse und Passwort.')}finally{btn.disabled=false}}
 async function register(){
   const email=document.getElementById('registerEmailInput').value.trim().toLowerCase();
+  const code=document.getElementById('activationCodeInput').value.trim().toUpperCase();
   const password=document.getElementById('registerPasswordInput').value;
   const repeat=document.getElementById('registerPasswordRepeatInput').value;
-  if(!email||!password||!repeat){showRegister('Bitte füllen Sie alle Felder aus.');return}
+
+  if(!email||!code||!password||!repeat){showRegister('Bitte füllen Sie alle Felder aus.');return}
   if(password.length<8){showRegister('Das Passwort muss mindestens 8 Zeichen lang sein.');return}
   if(password!==repeat){showRegister('Die beiden Passwörter stimmen nicht überein.');return}
+
   const btn=document.getElementById('registerBtn');btn.disabled=true;
+
   try{
-    const redirectTo=window.location.origin+window.location.pathname;
-    const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:redirectTo}});
+    const {data:checkData,error:checkError}=await sb.rpc('check_foodspot_activation',{
+      p_email:email,
+      p_code:code
+    });
+    if(checkError)throw checkError;
+    if(checkData!==true){
+      showRegister('<strong>Registrierung nicht möglich.</strong><br>E-Mail-Adresse oder Aktivierungscode ist nicht korrekt.');
+      return;
+    }
+
+    const {data,error}=await sb.auth.signUp({email,password});
     if(error)throw error;
+
+    if(!data.session){
+      showRegister('<strong>Registrierung konnte nicht automatisch abgeschlossen werden.</strong><br>Bitte wenden Sie sich an die Tagesstruktur.');
+      return;
+    }
+
+    const {error:claimError}=await sb.rpc('claim_foodspot_parent_children_with_code',{p_code:code});
+    if(claimError)throw claimError;
+
     document.getElementById('registerPasswordInput').value='';
     document.getElementById('registerPasswordRepeatInput').value='';
-    if(data.session){
-      await startApp();
-    }else{
-      showRegister('<strong>Fast geschafft.</strong><br>Wir haben Ihnen eine Bestätigungs-E-Mail gesendet. Bitte bestätigen Sie Ihre E-Mail-Adresse. Danach können Sie sich hier mit Ihrem selbst gewählten Passwort anmelden.','success');
-    }
+    document.getElementById('activationCodeInput').value='';
+    await startApp();
+
   }catch(err){
     console.error(err);
-    showRegister('<strong>Registrierung nicht möglich.</strong><br>Bitte prüfen Sie die E-Mail-Adresse. Falls bereits ein Konto besteht, verwenden Sie bitte den normalen Login.');
-  }finally{btn.disabled=false}
+    const msg=(err.message||'').toLowerCase();
+    if(msg.includes('already registered') || msg.includes('user already registered')){
+      showRegister('<strong>Für diese E-Mail-Adresse besteht bereits ein Konto.</strong><br>Bitte verwenden Sie den normalen Login.');
+    }else{
+      showRegister('<strong>Registrierung nicht möglich.</strong><br>Bitte prüfen Sie E-Mail-Adresse und Aktivierungscode.');
+    }
+  }finally{
+    btn.disabled=false;
+  }
 }
 async function startApp(){const {data:{session}}=await sb.auth.getSession();if(!session){loginView.style.display='block';app.style.display='none';return}loginView.style.display='none';app.style.display='block';document.getElementById('parentEmail').textContent=session.user.email||'Angemeldet';
-const {error:claimError}=await sb.rpc('claim_foodspot_parent_children');
-if(claimError){console.error('Automatische Eltern-Kind-Zuordnung:',claimError)}
 await loadParentChildren()}
 async function logout(){await sb.auth.signOut();child=null;children=[];app.style.display='none';loginView.style.display='block';document.getElementById('passwordInput').value='';document.getElementById('loginBox').style.display='none'}
 weekInput.value=nextWeekString();
@@ -146,7 +176,8 @@ document.getElementById('loginBtn').addEventListener('click',login);
 document.getElementById('showRegisterBtn').addEventListener('click',showRegisterPane);
 document.getElementById('backToLoginBtn').addEventListener('click',showSignInPane);
 document.getElementById('registerBtn').addEventListener('click',register);
-document.getElementById('registerPasswordRepeatInput').addEventListener('keydown',e=>{if(e.key==='Enter')register()});document.getElementById('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});document.getElementById('logoutBtn').addEventListener('click',logout);weekInput.addEventListener('change',loadWeek);reloadBtn.addEventListener('click',loadWeek);submitBtn.addEventListener('click',submitForm);document.getElementById('childSelect').addEventListener('change',async e=>{child=children.find(c=>c.child_id===e.target.value)||children[0];document.getElementById('childName').textContent=`${child.first_name} ${child.last_name}`;await loadWeek()});window.addEventListener('beforeunload',e=>{if(child&&!isSaving&&snapshotSelections()!==lastLoadedSnapshot){e.preventDefault();e.returnValue=''}});window.addEventListener('offline',()=>{if(app.style.display!=='none')showSystem('<strong>Keine Internetverbindung.</strong><br>Bitte stellen Sie die Verbindung wieder her, bevor Sie speichern.','error')});window.addEventListener('online',()=>{if(child)showSystem('<strong>Internetverbindung wiederhergestellt.</strong>','success')});
+document.getElementById('registerPasswordRepeatInput').addEventListener('keydown',e=>{if(e.key==='Enter')register()});
+document.getElementById('activationCodeInput').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase()});document.getElementById('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});document.getElementById('logoutBtn').addEventListener('click',logout);weekInput.addEventListener('change',loadWeek);reloadBtn.addEventListener('click',loadWeek);submitBtn.addEventListener('click',submitForm);document.getElementById('childSelect').addEventListener('change',async e=>{child=children.find(c=>c.child_id===e.target.value)||children[0];document.getElementById('childName').textContent=`${child.first_name} ${child.last_name}`;await loadWeek()});window.addEventListener('beforeunload',e=>{if(child&&!isSaving&&snapshotSelections()!==lastLoadedSnapshot){e.preventDefault();e.returnValue=''}});window.addEventListener('offline',()=>{if(app.style.display!=='none')showSystem('<strong>Keine Internetverbindung.</strong><br>Bitte stellen Sie die Verbindung wieder her, bevor Sie speichern.','error')});window.addEventListener('online',()=>{if(child)showSystem('<strong>Internetverbindung wiederhergestellt.</strong>','success')});
 startApp();
 </script>
 </body>
