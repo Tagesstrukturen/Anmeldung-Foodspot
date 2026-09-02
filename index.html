@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
 <title>Food Spot Frohheim – Elternanmeldung</title>
 <style>
 :root{--magenta:#d20a7c;--magenta-dark:#a90061;--lime:#c8e500;--cyan:#42b9e8;--blue:#147bd1;--ink:#242538;--muted:#697083;--bg:#f6f8fb;--card:#fff;--border:#e2e6ed;--success:#16814f;--danger:#b42318;--shadow:0 14px 34px rgba(40,48,68,.10)}
@@ -120,39 +121,51 @@ async function loadWeek(){
 }
 async function submitForm(){
   if(isSaving||!child||!weekInput.value||isClosed())return;
+
   const selections=getSelections();
+  const entries=selections.map(s=>({
+    attendance_date:s.date,
+    attending:s.present,
+    meal_type:s.present?s.food:null
+  }));
+
   confirmation.style.display='none';
   isSaving=true;
   submitBtn.disabled=true;
-  setBusy(true,'Anmeldung wird gespeichert …');
-  setSaveState('saving','Speichern läuft …');
+  setBusy(true,'Gesamte Woche wird gespeichert …');
+  setSaveState('saving','Wochenanmeldung wird gespeichert …');
+
   try{
-    for(const s of selections){
-      const {error}=await sb.rpc('save_foodspot_registration',{
-        p_token:token,
-        p_attendance_date:s.date,
-        p_attending:s.present,
-        p_meal_type:s.present?s.food:null
-      });
-      if(error)throw error;
+    const {data,error}=await sb.rpc('save_foodspot_week',{
+      p_token:token,
+      p_entries:entries
+    });
+
+    if(error)throw error;
+    if(!data?.length || data[0].success!==true){
+      throw new Error(data?.[0]?.message || 'Die Wochenanmeldung konnte nicht bestätigt werden.');
     }
+
     await loadWeek();
+
     const sel=getSelections(),
       careDays=sel.filter(s=>s.present).length,
       delivered=sel.filter(s=>s.present&&s.food==='delivered').length,
       own=sel.filter(s=>s.present&&s.food==='own').length,
       total=careDays*5+delivered*14;
+
     lastLoadedSnapshot=snapshotSelections();
     setSaveState('saved','Alle Angaben gespeichert');
     confirmation.style.display='block';
-    confirmation.innerHTML=`<strong>Anmeldung erfolgreich gespeichert.</strong><br>${child.first_name} ${child.last_name} wurde für ${careDays} Tag(e) angemeldet. Gelieferte Essen: ${delivered}, selbst mitgebracht: ${own}. Wochentotal: CHF ${total.toFixed(2)}.`;
+    confirmation.innerHTML=`<strong>Wochenanmeldung erfolgreich gespeichert.</strong><br>${child.first_name} ${child.last_name} wurde für ${careDays} Tag(e) angemeldet. Gelieferte Essen: ${delivered}, selbst mitgebracht: ${own}. Wochentotal: CHF ${total.toFixed(2)}.`;
     confirmation.scrollIntoView({behavior:'smooth',block:'center'});
-    showSystem('<strong>Gespeichert.</strong> Die Anmeldung wurde aus der zentralen Datenbank erneut geladen und bestätigt.','success');
+    showSystem('<strong>Gespeichert.</strong> Alle fünf Wochentage wurden gemeinsam gespeichert und anschliessend aus der zentralen Datenbank erneut geladen.','success');
+
   }catch(err){
     console.error(err);
     setSaveState('failed','Speichern fehlgeschlagen');
     const msg=(err&&err.message)?err.message:'Bitte versuchen Sie es erneut.';
-    showSystem(`<strong>Speichern fehlgeschlagen.</strong><br>${msg}<br><small>Ihre Eingaben bleiben auf dieser Seite erhalten. Bitte versuchen Sie es erneut.</small>`,'error');
+    showSystem(`<strong>Speichern fehlgeschlagen.</strong><br>${msg}<br><small>Es wurde keine unvollständige Wochenanmeldung übernommen. Ihre Eingaben bleiben auf dieser Seite erhalten.</small>`,'error');
   }finally{
     isSaving=false;
     setBusy(false,'');
