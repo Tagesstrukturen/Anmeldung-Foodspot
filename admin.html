@@ -99,6 +99,7 @@ th{background:rgba(66,185,232,.12);color:#15537a;position:sticky;top:0}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 const SUPABASE_URL='https://clpiezszlqhueldqbczk.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_i4lyAnju30vHysWqHhc2RA_5E_fQqnL';
@@ -220,32 +221,125 @@ function renderMonth(){
   $('monthKpis').innerHTML=`<div class="kpi">Betreuung<strong>${chf(care)}</strong></div><div class="kpi">Essen<strong>${chf(food)}</strong></div><div class="kpi">Monatstotal<strong>${chf(care+food)}</strong></div>`;
 }
 
-function downloadWeek(){
+async function downloadWeek(){
+  if(!currentWeekDates?.length || !currentWeekRows?.length){
+    alert('Bitte zuerst die gewünschte Woche laden.');
+    return;
+  }
+
   const labels=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
   const map=new Map();
   currentWeekRows.forEach(r=>{
-    if(!map.has(r.child_id))map.set(r.child_id,{Vorname:r.first_name,Nachname:r.last_name,days:{}});
-    if(r.attendance_date)map.get(r.child_id).days[r.attendance_date]=r;
+    if(!map.has(r.child_id)) map.set(r.child_id,{Vorname:r.first_name,Nachname:r.last_name,days:{}});
+    if(r.attendance_date) map.get(r.child_id).days[r.attendance_date]=r;
   });
-  const rows=[...map.values()].map(c=>{
-    const o={Vorname:c.Vorname,Nachname:c.Nachname};
-    currentWeekDates.forEach((d,i)=>{
+
+  const monday=currentWeekDates[0], friday=currentWeekDates[4];
+  const weekValue=$('weekInput').value;
+  const [yearPart,weekPart]=weekValue.split('-W');
+  const weekNo=Number(weekPart);
+  const dateCH=d=>d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const dayDate=d=>d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const wb=new ExcelJS.Workbook();
+  wb.creator='Food Spot Frohheim';
+  wb.created=new Date();
+  const ws=wb.addWorksheet('Wochenliste',{
+    pageSetup:{
+      paperSize:9,
+      orientation:'landscape',
+      fitToPage:true,
+      fitToWidth:1,
+      fitToHeight:1,
+      margins:{left:0.3,right:0.3,top:0.5,bottom:0.5,header:0.2,footer:0.2}
+    }
+  });
+
+  ws.mergeCells('A1:G1');
+  ws.getCell('A1').value=`Food Spot Frohheim – Wochenliste KW ${weekNo} / ${yearPart}`;
+  ws.getCell('A1').font={bold:true,size:16,color:{argb:'FFFFFFFF'}};
+  ws.getCell('A1').alignment={vertical:'middle',horizontal:'left'};
+  ws.getCell('A1').fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD20A7C'}};
+  ws.getRow(1).height=28;
+
+  ws.mergeCells('A2:G2');
+  ws.getCell('A2').value=`Zeitraum: ${dateCH(monday)} – ${dateCH(friday)}`;
+  ws.getCell('A2').font={italic:true,color:{argb:'FF697083'}};
+  ws.getCell('A2').alignment={vertical:'middle',horizontal:'left'};
+  ws.getRow(2).height=21;
+  ws.getRow(3).height=8;
+
+  const headerRow=ws.getRow(4);
+  headerRow.values=['Vorname','Nachname',...labels.map((label,i)=>`${label}\n${dayDate(currentWeekDates[i])}`)];
+  headerRow.height=34;
+  headerRow.eachCell(cell=>{
+    cell.font={bold:true,color:{argb:'FF15537A'}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDFF2FB'}};
+    cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+    cell.border={top:{style:'thin',color:{argb:'FFB9DCEB'}},left:{style:'thin',color:{argb:'FFB9DCEB'}},bottom:{style:'thin',color:{argb:'FFB9DCEB'}},right:{style:'thin',color:{argb:'FFB9DCEB'}}};
+  });
+  headerRow.getCell(1).alignment={vertical:'middle',horizontal:'left'};
+  headerRow.getCell(2).alignment={vertical:'middle',horizontal:'left'};
+
+  [...map.values()].forEach(c=>{
+    const values=[c.Vorname,c.Nachname];
+    currentWeekDates.forEach(d=>{
       const r=c.days[ymd(d)];
-      o[labels[i]]=!r||!r.attending?'Abgemeldet':r.meal_type==='delivered'?'Geliefert':'Selbst mitgebracht';
+      values.push(!r||!r.attending?'Abgemeldet':r.meal_type==='delivered'?'Geliefert':'Selbst mitgebracht');
     });
-    return o;
+    const row=ws.addRow(values);
+    row.height=24;
+    row.eachCell((cell,col)=>{
+      cell.alignment={vertical:'middle',horizontal:col<=2?'left':'center',wrapText:true};
+      cell.border={top:{style:'thin',color:{argb:'FFE2E6ED'}},left:{style:'thin',color:{argb:'FFE2E6ED'}},bottom:{style:'thin',color:{argb:'FFE2E6ED'}},right:{style:'thin',color:{argb:'FFE2E6ED'}}};
+      if(col>=3){
+        if(cell.value==='Geliefert') cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE7F2FE'}};
+        if(cell.value==='Selbst mitgebracht') cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF1F8D6'}};
+        if(cell.value==='Abgemeldet') cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F1F3'}};
+      }
+    });
   });
-  const totalsPresent={Vorname:'TOTAL',Nachname:'Anwesend'}, totalsFood={Vorname:'TOTAL',Nachname:'Essen bestellen'};
-  currentWeekDates.forEach((d,i)=>{
+
+  const present=['Anwesend',''];
+  const food=['Essen bestellen',''];
+  currentWeekDates.forEach(d=>{
     const date=ymd(d);
     const rs=currentWeekRows.filter(r=>r.attendance_date===date);
-    totalsPresent[labels[i]]=rs.filter(r=>r.attending).length;
-    totalsFood[labels[i]]=rs.filter(r=>r.attending&&r.meal_type==='delivered').length;
+    present.push(rs.filter(r=>r.attending).length);
+    food.push(rs.filter(r=>r.attending&&r.meal_type==='delivered').length);
   });
-  rows.push(totalsPresent,totalsFood);
-  const ws=XLSX.utils.json_to_sheet(rows);
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Wochenliste');
-  XLSX.writeFile(wb,`Foodspot_Wochenliste_${$('weekInput').value}.xlsx`);
+  const presentRow=ws.addRow(present);
+  const foodRow=ws.addRow(food);
+  [presentRow,foodRow].forEach(row=>{
+    row.height=24;
+    row.font={bold:true};
+    row.eachCell((cell,col)=>{
+      cell.alignment={vertical:'middle',horizontal:col<=2?'left':'center'};
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF8FBE7'}};
+      cell.border={top:{style:'thin',color:{argb:'FFD7E08C'}},left:{style:'thin',color:{argb:'FFD7E08C'}},bottom:{style:'thin',color:{argb:'FFD7E08C'}},right:{style:'thin',color:{argb:'FFD7E08C'}}};
+    });
+  });
+  ws.mergeCells(`A${presentRow.number}:B${presentRow.number}`);
+  ws.mergeCells(`A${foodRow.number}:B${foodRow.number}`);
+
+  ws.columns=[
+    {width:18},{width:20},{width:22},{width:22},{width:22},{width:22},{width:22}
+  ];
+  ws.views=[{state:'frozen',ySplit:4,xSplit:2}];
+  ws.autoFilter={from:{row:4,column:1},to:{row:4,column:7}};
+  ws.pageSetup.printArea=`A1:G${foodRow.number}`;
+  ws.headerFooter.oddFooter='&LFood Spot Frohheim&CSeite &P von &N&RKW '+weekNo+' / '+yearPart;
+
+  const buffer=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`Foodspot_Wochenliste_KW${String(weekNo).padStart(2,'0')}_${yearPart}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function downloadMonth(){
   const rows=currentMonthRows.map(r=>({
