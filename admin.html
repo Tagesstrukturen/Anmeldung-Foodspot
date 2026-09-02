@@ -255,14 +255,14 @@ async function downloadWeek(){
     }
   });
 
-  ws.mergeCells('A1:G1');
+  ws.mergeCells('A1:H1');
   ws.getCell('A1').value=`Food Spot Frohheim – Wochenliste KW ${weekNo} / ${yearPart}`;
   ws.getCell('A1').font={bold:true,size:16,color:{argb:'FFFFFFFF'}};
   ws.getCell('A1').alignment={vertical:'middle',horizontal:'left'};
   ws.getCell('A1').fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD20A7C'}};
   ws.getRow(1).height=28;
 
-  ws.mergeCells('A2:G2');
+  ws.mergeCells('A2:H2');
   ws.getCell('A2').value=`Zeitraum: ${dateCH(monday)} – ${dateCH(friday)}`;
   ws.getCell('A2').font={italic:true,color:{argb:'FF697083'}};
   ws.getCell('A2').alignment={vertical:'middle',horizontal:'left'};
@@ -270,7 +270,7 @@ async function downloadWeek(){
   ws.getRow(3).height=8;
 
   const headerRow=ws.getRow(4);
-  headerRow.values=['Vorname','Nachname',...labels.map((label,i)=>`${label}\n${dayDate(currentWeekDates[i])}`)];
+  headerRow.values=['Vorname','Nachname',...labels.map((label,i)=>`${label}\n${dayDate(currentWeekDates[i])}`),'Total Woche'];
   headerRow.height=34;
   headerRow.eachCell(cell=>{
     cell.font={bold:true,color:{argb:'FF15537A'}};
@@ -283,10 +283,13 @@ async function downloadWeek(){
 
   [...map.values()].forEach(c=>{
     const values=[c.Vorname,c.Nachname];
+    let childPresentTotal=0;
     currentWeekDates.forEach(d=>{
       const r=c.days[ymd(d)];
+      if(r&&r.attending) childPresentTotal++;
       values.push(!r||!r.attending?'Abgemeldet':r.meal_type==='delivered'?'Geliefert':'Selbst mitgebracht');
     });
+    values.push(childPresentTotal);
     const row=ws.addRow(values);
     row.height=24;
     row.eachCell((cell,col)=>{
@@ -301,16 +304,25 @@ async function downloadWeek(){
   });
 
   const present=['Anwesend',''];
-  const food=['Essen bestellen',''];
+  const food=['Essen geliefert / bestellen',''];
+  const own=['Essen selbst mitgebracht',''];
+  let presentWeekTotal=0, deliveredWeekTotal=0, ownWeekTotal=0;
   currentWeekDates.forEach(d=>{
     const date=ymd(d);
     const rs=currentWeekRows.filter(r=>r.attendance_date===date);
-    present.push(rs.filter(r=>r.attending).length);
-    food.push(rs.filter(r=>r.attending&&r.meal_type==='delivered').length);
+    const pCount=rs.filter(r=>r.attending).length;
+    const dCount=rs.filter(r=>r.attending&&r.meal_type==='delivered').length;
+    const oCount=rs.filter(r=>r.attending&&r.meal_type==='own').length;
+    present.push(pCount); food.push(dCount); own.push(oCount);
+    presentWeekTotal+=pCount; deliveredWeekTotal+=dCount; ownWeekTotal+=oCount;
   });
+  present.push(presentWeekTotal);
+  food.push(deliveredWeekTotal);
+  own.push(ownWeekTotal);
   const presentRow=ws.addRow(present);
   const foodRow=ws.addRow(food);
-  [presentRow,foodRow].forEach(row=>{
+  const ownRow=ws.addRow(own);
+  [presentRow,foodRow,ownRow].forEach(row=>{
     row.height=24;
     row.font={bold:true};
     row.eachCell((cell,col)=>{
@@ -321,13 +333,18 @@ async function downloadWeek(){
   });
   ws.mergeCells(`A${presentRow.number}:B${presentRow.number}`);
   ws.mergeCells(`A${foodRow.number}:B${foodRow.number}`);
+  ws.mergeCells(`A${ownRow.number}:B${ownRow.number}`);
+  foodRow.eachCell((cell)=>{
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF0C7'}};
+    cell.border={top:{style:'medium',color:{argb:'FFF0B429'}},left:{style:'thin',color:{argb:'FFF0B429'}},bottom:{style:'medium',color:{argb:'FFF0B429'}},right:{style:'thin',color:{argb:'FFF0B429'}}};
+  });
 
   ws.columns=[
-    {width:18},{width:20},{width:22},{width:22},{width:22},{width:22},{width:22}
+    {width:18},{width:20},{width:22},{width:22},{width:22},{width:22},{width:22},{width:14}
   ];
   ws.views=[{state:'frozen',ySplit:4,xSplit:2}];
-  ws.autoFilter={from:{row:4,column:1},to:{row:4,column:7}};
-  ws.pageSetup.printArea=`A1:G${foodRow.number}`;
+  ws.autoFilter={from:{row:4,column:1},to:{row:4,column:8}};
+  ws.pageSetup.printArea=`A1:H${ownRow.number}`;
   ws.headerFooter.oddFooter='&LFood Spot Frohheim&CSeite &P von &N&RKW '+weekNo+' / '+yearPart;
 
   const buffer=await wb.xlsx.writeBuffer();
