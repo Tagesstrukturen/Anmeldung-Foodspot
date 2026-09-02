@@ -25,15 +25,30 @@ button{border:0;border-radius:11px;padding:12px 18px;font:inherit;font-weight:80
 .save-state.saved{color:var(--success)}.save-state.saved .save-dot{background:var(--success)}
 .save-state.failed{color:var(--danger)}.save-state.failed .save-dot{background:var(--danger)}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+.login-wrap{max-width:560px;margin:30px auto;padding:0 16px 44px}.login-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:24px;box-shadow:var(--shadow)}.login-card h2{margin-top:0;color:var(--magenta)}.login-grid{display:grid;gap:14px}.login-actions{display:flex;justify-content:flex-end;margin-top:16px}.userbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;padding:12px 14px;background:#f4f7fa;border:1px solid var(--border);border-radius:13px}.userbar strong{display:block}.userbar small{display:block;margin-top:2px}.child-select-wrap{margin-top:12px}select{width:100%;padding:12px 13px;border:1px solid #ccd3df;border-radius:11px;font:inherit;background:#fff}select:focus{outline:3px solid rgba(66,185,232,.24);border-color:var(--cyan)}
 @media(max-width:900px){.week-grid{grid-template-columns:1fr 1fr}.cost-layout{grid-template-columns:1fr}}@media(max-width:620px){.header-inner{align-items:flex-start}.header-copy{padding-left:14px}header h1{font-size:21px}.info-grid,.week-grid{grid-template-columns:1fr}.brand-logo{width:145px}}
 </style>
 </head>
 <body>
 <header><div class="header-inner"><img class="brand-logo" src="data:image/png;base64,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" alt="Schule Olten bewegt"><div class="header-copy"><h1>Food Spot Frohheim</h1><p>An- und Abmeldung für die gewünschte Kalenderwoche</p></div></div></header>
-<main id="app">
+<main id="loginView" class="login-wrap">
+  <section class="login-card">
+    <h2>Eltern-Login</h2>
+    <p>Bitte melden Sie sich mit Ihrer E-Mail-Adresse und Ihrem Passwort an.</p>
+    <div id="loginBox" class="notice" style="display:none"></div>
+    <div class="login-grid">
+      <div><label for="emailInput">E-Mail-Adresse</label><input type="email" id="emailInput" autocomplete="username"></div>
+      <div><label for="passwordInput">Passwort</label><input type="password" id="passwordInput" autocomplete="current-password"></div>
+    </div>
+    <div class="login-actions"><button class="btn-primary" id="loginBtn">Anmelden</button></div>
+  </section>
+</main>
+<main id="app" style="display:none">
+  <div class="userbar"><div><strong id="parentEmail">Angemeldet</strong><small>Elternkonto</small></div><button class="btn-secondary" id="logoutBtn">Abmelden</button></div>
   <div id="systemBox" class="notice">Verbindung wird aufgebaut …</div>
   <div id="deadlineBox" class="notice" style="display:none"></div>
-  <section class="card"><h2 style="margin-top:0">Anmeldung</h2><p>Bitte erfassen Sie die Anmeldung für Ihr Kind bis Donnerstagabend.</p><div class="info-grid"><div class="person-box"><div class="person-label">Kind</div><div class="person-name" id="childName">Wird geladen …</div></div><div><label for="weekInput">Kalenderwoche *</label><input type="week" id="weekInput" disabled></div></div><div class="status-line" id="loadStatus"></div></section>
+  <section class="card"><h2 style="margin-top:0">Anmeldung</h2><p>Bitte erfassen Sie die Anmeldung für Ihr Kind bis Donnerstagabend.</p><div class="info-grid"><div class="person-box"><div class="person-label">Kind</div><div class="person-name" id="childName">Wird geladen …</div><div id="childSelectWrap" class="child-select-wrap" style="display:none"><label for="childSelect">Kind auswählen</label><select id="childSelect"></select></div></div><div><label for="weekInput">Kalenderwoche *</label><input type="week" id="weekInput" disabled></div></div><div class="status-line" id="loadStatus"></div></section>
   <section class="card"><h2 style="margin-top:0">Tage auswählen</h2><p><small>Für jeden Tag kann separat gewählt werden, ob Ihr Kind teilnimmt und ob das Essen selbst mitgebracht oder geliefert werden soll.</small></p><div class="week-grid" id="weekGrid"></div></section>
   <section class="card"><h2 style="margin-top:0">Kostenübersicht</h2><div class="cost-layout"><div class="price-box"><div class="price-row"><span>Betreuung</span><strong id="careTotal">CHF 0.00</strong></div><div class="price-row"><span>Gelieferte Essen</span><strong id="foodTotal">CHF 0.00</strong></div><div class="price-row"><span>Selbst mitgebracht</span><strong>CHF 0.00</strong></div><div class="price-row price-total"><span>Total pro Woche</span><strong id="grandTotal">CHF 0.00</strong></div></div><div class="week-total-box"><span>Wochentotal</span><strong id="weekTotalLarge">CHF 0.00</strong><small style="color:#fff;opacity:.85">inkl. Betreuung und gelieferte Essen</small></div></div><p><small>Pro angemeldetem Tag werden CHF 5.00 Betreuung verrechnet. Ein geliefertes Essen kostet zusätzlich CHF 14.00.</small></p></section>
   <section class="card"><h2 style="margin-top:0">Zusammenfassung</h2><table class="summary-table"><thead><tr><th>Tag</th><th>Status</th><th>Essen</th><th>Kosten</th></tr></thead><tbody id="summaryBody"></tbody></table><div class="actions"><div id="saveState" class="save-state"><span class="save-dot"></span><span id="saveStateText">Noch nicht gespeichert</span></div><button class="btn-secondary" id="reloadBtn" disabled>Neu laden</button><button class="btn-primary" id="submitBtn" disabled>Anmeldung speichern</button></div></section>
@@ -45,30 +60,16 @@ button{border:0;border-radius:11px;padding:12px 18px;font:inherit;font-weight:80
 <script>
 const SUPABASE_URL='https://clpiezszlqhueldqbczk.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_i4lyAnju30vHysWqHhc2RA_5E_fQqnL';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-const token=new URLSearchParams(location.search).get('token');
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const days=[{key:'Mo',label:'Montag'},{key:'Di',label:'Dienstag'},{key:'Mi',label:'Mittwoch'},{key:'Do',label:'Donnerstag'},{key:'Fr',label:'Freitag'}];
+let children=[];
 let child=null;
 let isSaving=false;
 let lastLoadedSnapshot='';
-const app=document.getElementById('app'), systemBox=document.getElementById('systemBox'), weekInput=document.getElementById('weekInput'), submitBtn=document.getElementById('submitBtn'), reloadBtn=document.getElementById('reloadBtn'), saveState=document.getElementById('saveState'), saveStateText=document.getElementById('saveStateText'), confirmation=document.getElementById('confirmation');
-
+const app=document.getElementById('app'),loginView=document.getElementById('loginView'),systemBox=document.getElementById('systemBox'),weekInput=document.getElementById('weekInput'),submitBtn=document.getElementById('submitBtn'),reloadBtn=document.getElementById('reloadBtn'),saveState=document.getElementById('saveState'),saveStateText=document.getElementById('saveStateText'),confirmation=document.getElementById('confirmation');
+function showLogin(text,type='error'){const box=document.getElementById('loginBox');box.style.display='block';box.className='notice'+(type==='error'?' error':type==='success'?' success':'');box.innerHTML=text}
 function showSystem(text,type='info'){systemBox.style.display='block';systemBox.className='notice'+(type==='error'?' error':type==='success'?' success':'');systemBox.innerHTML=text}
-function setSaveState(state,text){
-  saveState.className='save-state'+(state?` ${state}`:'');
-  saveStateText.textContent=text;
-}
-function snapshotSelections(){
-  return JSON.stringify(getSelections().map(s=>({date:s.date,present:s.present,food:s.present?s.food:null})));
-}
-function markDirty(){
-  if(!child||isSaving)return;
-  if(snapshotSelections()!==lastLoadedSnapshot){
-    setSaveState('', 'Änderungen noch nicht gespeichert');
-  }else{
-    setSaveState('saved','Alle Angaben gespeichert');
-  }
-}
+function setSaveState(state,text){saveState.className='save-state'+(state?` ${state}`:'');saveStateText.textContent=text}
 function isoWeekString(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);const ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));const w=Math.ceil((((d-ys)/86400000)+1)/7);return `${d.getUTCFullYear()}-W${String(w).padStart(2,'0')}`}
 function nextWeekString(){const d=new Date();d.setDate(d.getDate()+7);return isoWeekString(d)}
 function getWeekDates(weekStr){const [ys,ws]=weekStr.split('-W'),year=+ys,week=+ws;const jan4=new Date(year,0,4),jan4Day=(jan4.getDay()+6)%7;const monday=new Date(year,0,4-jan4Day+(week-1)*7);return days.map((day,i)=>{const date=new Date(monday);date.setDate(monday.getDate()+i);return {...day,date}})}
@@ -76,116 +77,21 @@ function yyyyMmDd(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStar
 function deadlineForWeek(weekStr){const monday=getWeekDates(weekStr)[0].date;const deadline=new Date(monday);deadline.setDate(monday.getDate()-4);deadline.setHours(23,59,59,999);return deadline}
 function isClosed(){return !weekInput.value || new Date()>deadlineForWeek(weekInput.value)}
 function updateDeadline(){if(!weekInput.value)return;const deadline=deadlineForWeek(weekInput.value),closed=new Date()>deadline;const box=document.getElementById('deadlineBox');box.style.display='block';box.className='notice '+(closed?'closed':'');box.innerHTML=closed?`<strong>Anmeldefrist abgelaufen.</strong><br>Änderungen für diese Woche waren bis Donnerstag, ${deadline.toLocaleDateString('de-CH')} um 23:59 Uhr möglich.`:`<strong>Anmeldung offen.</strong><br>Änderungen sind bis Donnerstag, ${deadline.toLocaleDateString('de-CH')} um 23:59 Uhr möglich.`;submitBtn.disabled=closed||!child||isSaving}
-function buildWeekGrid(){const week=weekInput.value;if(!week)return;const dates=getWeekDates(week);document.getElementById('weekGrid').innerHTML=dates.map(({key,label,date})=>`<div class="day-card"><h3>${label}<br><small>${date.toLocaleDateString('de-CH')}</small></h3><label class="switch-row"><input type="checkbox" data-day="${key}" data-date="${yyyyMmDd(date)}" data-type="present"><span>Kind kommt</span></label><div class="food-options" id="food-${key}"><label class="radio-row"><input type="radio" name="food-${key}" value="own"><span><strong>Selbst mitgebracht</strong><br><small>CHF 0.00 Essen</small></span></label><label class="radio-row"><input type="radio" name="food-${key}" value="delivered" checked><span><strong>Geliefertes Essen</strong><br><small>CHF 14.00</small></span></label></div></div>`).join('');document.querySelectorAll('input[data-type="present"]').forEach(cb=>cb.addEventListener('change',e=>{document.getElementById(`food-${e.target.dataset.day}`).classList.toggle('show',e.target.checked);updateTotals();markDirty()}));document.querySelectorAll('input[type="radio"]').forEach(r=>r.addEventListener('change',()=>{updateTotals();markDirty()}));updateDeadline();updateTotals()}
 function getSelections(){return days.map(({key,label})=>{const cb=document.querySelector(`input[data-day="${key}"][data-type="present"]`);const present=cb?.checked||false;const food=document.querySelector(`input[name="food-${key}"]:checked`)?.value||'delivered';return {key,label,date:cb?.dataset.date,present,food}})}
-function updateTotals(){let care=0,food=0;const body=document.getElementById('summaryBody');body.innerHTML='';getSelections().forEach(s=>{let cost=0;if(s.present){care+=5;cost+=5;if(s.food==='delivered'){food+=14;cost+=14}}const tr=document.createElement('tr');tr.innerHTML=`<td>${s.label}</td><td>${s.present?'Angemeldet':'Abgemeldet'}</td><td>${s.present?(s.food==='own'?'Selbst mitgebracht':'Geliefert'):'–'}</td><td>CHF ${cost.toFixed(2)}</td>`;body.appendChild(tr)});const total=care+food;careTotal.textContent=`CHF ${care.toFixed(2)}`;foodTotal.textContent=`CHF ${food.toFixed(2)}`;grandTotal.textContent=`CHF ${total.toFixed(2)}`;weekTotalLarge.textContent=`CHF ${total.toFixed(2)}`}
-function setBusy(busy,text=''){
-  app.classList.toggle('loading',busy);
-  weekInput.disabled=busy||!child;
-  reloadBtn.disabled=busy||!child;
-  if(text)document.getElementById('loadStatus').textContent=text;
-  if(busy) submitBtn.disabled=true;
-  else updateDeadline();
-}
-async function loadChild(){if(!token){showSystem('<strong>Ungültiger Link.</strong><br>Im Link fehlt der persönliche Zugangscode.','error');return}setBusy(true,'Kind wird geladen …');const {data,error}=await sb.rpc('get_foodspot_child',{p_token:token});if(error||!data?.length){console.error(error);showSystem('<strong>Link konnte nicht geöffnet werden.</strong><br>Bitte verwenden Sie den vollständigen Link, den Sie von der Tagesstruktur erhalten haben.','error');setBusy(false,'');return}child=data[0];document.getElementById('childName').textContent=`${child.first_name} ${child.last_name}`;weekInput.disabled=false;reloadBtn.disabled=false;showSystem('<strong>Verbindung hergestellt.</strong> Ihre Angaben werden sicher in der zentralen Datenbank gespeichert.','success');setBusy(false,'');await loadWeek()}
-async function loadWeek(){
-  if(!child||!weekInput.value)return;
-  confirmation.style.display='none';
-  setBusy(true,'Gespeicherte Anmeldung wird geladen …');
-  setSaveState('saving','Angaben werden geladen …');
-  buildWeekGrid();
-  const dates=getWeekDates(weekInput.value),from=yyyyMmDd(dates[0].date),to=yyyyMmDd(dates[4].date);
-  try{
-    const {data,error}=await sb.rpc('get_foodspot_registrations',{p_token:token,p_from:from,p_to:to});
-    if(error)throw error;
-    (data||[]).forEach(r=>{
-      const cb=document.querySelector(`input[data-date="${r.attendance_date}"]`);
-      if(!cb)return;
-      cb.checked=!!r.attending;
-      document.getElementById(`food-${cb.dataset.day}`).classList.toggle('show',!!r.attending);
-      if(r.meal_type){
-        const radio=document.querySelector(`input[name="food-${cb.dataset.day}"][value="${r.meal_type}"]`);
-        if(radio)radio.checked=true;
-      }
-    });
-    updateTotals();
-    lastLoadedSnapshot=snapshotSelections();
-    setSaveState('saved','Alle Angaben gespeichert');
-    setBusy(false,data?.length?'Gespeicherte Angaben geladen.':'Für diese Woche sind noch keine Angaben gespeichert.');
-  }catch(error){
-    console.error(error);
-    setSaveState('failed','Laden fehlgeschlagen');
-    showSystem('<strong>Anmeldung konnte nicht geladen werden.</strong><br>Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.','error');
-    setBusy(false,'Fehler beim Laden.');
-  }
-}
-async function submitForm(){
-  if(isSaving||!child||!weekInput.value||isClosed())return;
-
-  const selections=getSelections();
-  const entries=selections.map(s=>({
-    attendance_date:s.date,
-    attending:s.present,
-    meal_type:s.present?s.food:null
-  }));
-
-  confirmation.style.display='none';
-  isSaving=true;
-  submitBtn.disabled=true;
-  setBusy(true,'Gesamte Woche wird gespeichert …');
-  setSaveState('saving','Wochenanmeldung wird gespeichert …');
-
-  try{
-    const {data,error}=await sb.rpc('save_foodspot_week',{
-      p_token:token,
-      p_entries:entries
-    });
-
-    if(error)throw error;
-    if(!data?.length || data[0].success!==true){
-      throw new Error(data?.[0]?.message || 'Die Wochenanmeldung konnte nicht bestätigt werden.');
-    }
-
-    await loadWeek();
-
-    const sel=getSelections(),
-      careDays=sel.filter(s=>s.present).length,
-      delivered=sel.filter(s=>s.present&&s.food==='delivered').length,
-      own=sel.filter(s=>s.present&&s.food==='own').length,
-      total=careDays*5+delivered*14;
-
-    lastLoadedSnapshot=snapshotSelections();
-    setSaveState('saved','Alle Angaben gespeichert');
-    confirmation.style.display='block';
-    confirmation.innerHTML=`<strong>Wochenanmeldung erfolgreich gespeichert.</strong><br>${child.first_name} ${child.last_name} wurde für ${careDays} Tag(e) angemeldet. Gelieferte Essen: ${delivered}, selbst mitgebracht: ${own}. Wochentotal: CHF ${total.toFixed(2)}.`;
-    confirmation.scrollIntoView({behavior:'smooth',block:'center'});
-    showSystem('<strong>Gespeichert.</strong> Alle fünf Wochentage wurden gemeinsam gespeichert und anschliessend aus der zentralen Datenbank erneut geladen.','success');
-
-  }catch(err){
-    console.error(err);
-    setSaveState('failed','Speichern fehlgeschlagen');
-    const msg=(err&&err.message)?err.message:'Bitte versuchen Sie es erneut.';
-    showSystem(`<strong>Speichern fehlgeschlagen.</strong><br>${msg}<br><small>Es wurde keine unvollständige Wochenanmeldung übernommen. Ihre Eingaben bleiben auf dieser Seite erhalten.</small>`,'error');
-  }finally{
-    isSaving=false;
-    setBusy(false,'');
-    updateDeadline();
-  }
-}
+function snapshotSelections(){return JSON.stringify(getSelections().map(s=>({date:s.date,present:s.present,food:s.present?s.food:null})))}
+function markDirty(){if(!child||isSaving)return;if(snapshotSelections()!==lastLoadedSnapshot)setSaveState('', 'Änderungen noch nicht gespeichert');else setSaveState('saved','Alle Angaben gespeichert')}
+function buildWeekGrid(){const week=weekInput.value;if(!week)return;const dates=getWeekDates(week);document.getElementById('weekGrid').innerHTML=dates.map(({key,label,date})=>`<div class="day-card"><h3>${label}<br><small>${date.toLocaleDateString('de-CH')}</small></h3><label class="switch-row"><input type="checkbox" data-day="${key}" data-date="${yyyyMmDd(date)}" data-type="present"><span>Kind kommt</span></label><div class="food-options" id="food-${key}"><label class="radio-row"><input type="radio" name="food-${key}" value="own"><span><strong>Selbst mitgebracht</strong><br><small>CHF 0.00 Essen</small></span></label><label class="radio-row"><input type="radio" name="food-${key}" value="delivered" checked><span><strong>Geliefertes Essen</strong><br><small>CHF 14.00</small></span></label></div></div>`).join('');document.querySelectorAll('input[data-type="present"]').forEach(cb=>cb.addEventListener('change',e=>{document.getElementById(`food-${e.target.dataset.day}`).classList.toggle('show',e.target.checked);updateTotals();markDirty()}));document.querySelectorAll('input[type="radio"]').forEach(r=>r.addEventListener('change',()=>{updateTotals();markDirty()}));updateDeadline();updateTotals()}
+function updateTotals(){let care=0,food=0;const body=document.getElementById('summaryBody');body.innerHTML='';getSelections().forEach(s=>{let cost=0;if(s.present){care+=5;cost+=5;if(s.food==='delivered'){food+=14;cost+=14}}const tr=document.createElement('tr');tr.innerHTML=`<td>${s.label}</td><td>${s.present?'Angemeldet':'Abgemeldet'}</td><td>${s.present?(s.food==='own'?'Selbst mitgebracht':'Geliefert'):'–'}</td><td>CHF ${cost.toFixed(2)}</td>`;body.appendChild(tr)});const total=care+food;document.getElementById('careTotal').textContent=`CHF ${care.toFixed(2)}`;document.getElementById('foodTotal').textContent=`CHF ${food.toFixed(2)}`;document.getElementById('grandTotal').textContent=`CHF ${total.toFixed(2)}`;document.getElementById('weekTotalLarge').textContent=`CHF ${total.toFixed(2)}`}
+function setBusy(busy,text=''){app.classList.toggle('loading',busy);weekInput.disabled=busy||!child;reloadBtn.disabled=busy||!child;if(text)document.getElementById('loadStatus').textContent=text;if(busy)submitBtn.disabled=true;else updateDeadline()}
+async function loadParentChildren(){setBusy(true,'Kind wird geladen …');const {data,error}=await sb.rpc('get_foodspot_parent_children');if(error){console.error(error);showSystem('<strong>Kind konnte nicht geladen werden.</strong><br>Bitte wenden Sie sich an die Tagesstruktur.','error');setBusy(false,'');return}children=data||[];if(!children.length){showSystem('<strong>Kein Kind zugeordnet.</strong><br>Für dieses Elternkonto ist noch kein Kind hinterlegt.','error');setBusy(false,'');return}const select=document.getElementById('childSelect');select.innerHTML=children.map(c=>`<option value="${c.child_id}">${c.first_name} ${c.last_name}</option>`).join('');document.getElementById('childSelectWrap').style.display=children.length>1?'block':'none';child=children[0];document.getElementById('childName').textContent=`${child.first_name} ${child.last_name}`;weekInput.disabled=false;reloadBtn.disabled=false;showSystem('<strong>Angemeldet.</strong> Ihr Kind wurde automatisch Ihrem Elternkonto zugeordnet.','success');setBusy(false,'');await loadWeek()}
+async function loadWeek(){if(!child||!weekInput.value)return;confirmation.style.display='none';setBusy(true,'Gespeicherte Anmeldung wird geladen …');setSaveState('saving','Angaben werden geladen …');buildWeekGrid();const dates=getWeekDates(weekInput.value),from=yyyyMmDd(dates[0].date),to=yyyyMmDd(dates[4].date);try{const {data,error}=await sb.rpc('get_foodspot_parent_registrations',{p_child_id:child.child_id,p_from:from,p_to:to});if(error)throw error;(data||[]).forEach(r=>{const cb=document.querySelector(`input[data-date="${r.attendance_date}"]`);if(!cb)return;cb.checked=!!r.attending;document.getElementById(`food-${cb.dataset.day}`).classList.toggle('show',!!r.attending);if(r.meal_type){const radio=document.querySelector(`input[name="food-${cb.dataset.day}"][value="${r.meal_type}"]`);if(radio)radio.checked=true}});updateTotals();lastLoadedSnapshot=snapshotSelections();setSaveState('saved','Alle Angaben gespeichert');setBusy(false,data?.length?'Gespeicherte Angaben geladen.':'Für diese Woche sind noch keine Angaben gespeichert.')}catch(error){console.error(error);setSaveState('failed','Laden fehlgeschlagen');showSystem('<strong>Anmeldung konnte nicht geladen werden.</strong><br>Bitte versuchen Sie es erneut.','error');setBusy(false,'Fehler beim Laden.')}}
+async function submitForm(){if(isSaving||!child||!weekInput.value||isClosed())return;const entries=getSelections().map(s=>({attendance_date:s.date,attending:s.present,meal_type:s.present?s.food:null}));confirmation.style.display='none';isSaving=true;submitBtn.disabled=true;setBusy(true,'Gesamte Woche wird gespeichert …');setSaveState('saving','Wochenanmeldung wird gespeichert …');try{const {data,error}=await sb.rpc('save_foodspot_parent_week',{p_child_id:child.child_id,p_entries:entries});if(error)throw error;if(!data?.length||data[0].success!==true)throw new Error(data?.[0]?.message||'Die Wochenanmeldung konnte nicht bestätigt werden.');await loadWeek();const sel=getSelections(),careDays=sel.filter(s=>s.present).length,delivered=sel.filter(s=>s.present&&s.food==='delivered').length,own=sel.filter(s=>s.present&&s.food==='own').length,total=careDays*5+delivered*14;lastLoadedSnapshot=snapshotSelections();setSaveState('saved','Alle Angaben gespeichert');confirmation.style.display='block';confirmation.innerHTML=`<strong>Wochenanmeldung erfolgreich gespeichert.</strong><br>${child.first_name} ${child.last_name} wurde für ${careDays} Tag(e) angemeldet. Gelieferte Essen: ${delivered}, selbst mitgebracht: ${own}. Wochentotal: CHF ${total.toFixed(2)}.`;confirmation.scrollIntoView({behavior:'smooth',block:'center'});showSystem('<strong>Gespeichert.</strong> Alle fünf Wochentage wurden gemeinsam gespeichert.','success')}catch(err){console.error(err);setSaveState('failed','Speichern fehlgeschlagen');showSystem(`<strong>Speichern fehlgeschlagen.</strong><br>${err?.message||'Bitte versuchen Sie es erneut.'}`,'error')}finally{isSaving=false;setBusy(false,'');updateDeadline()}}
+async function login(){const email=document.getElementById('emailInput').value.trim(),password=document.getElementById('passwordInput').value;if(!email||!password){showLogin('Bitte E-Mail-Adresse und Passwort eingeben.');return}const btn=document.getElementById('loginBtn');btn.disabled=true;try{const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await startApp()}catch(err){console.error(err);showLogin('<strong>Anmeldung fehlgeschlagen.</strong><br>Bitte prüfen Sie E-Mail-Adresse und Passwort.')}finally{btn.disabled=false}}
+async function startApp(){const {data:{session}}=await sb.auth.getSession();if(!session){loginView.style.display='block';app.style.display='none';return}loginView.style.display='none';app.style.display='block';document.getElementById('parentEmail').textContent=session.user.email||'Angemeldet';await loadParentChildren()}
+async function logout(){await sb.auth.signOut();child=null;children=[];app.style.display='none';loginView.style.display='block';document.getElementById('passwordInput').value='';document.getElementById('loginBox').style.display='none'}
 weekInput.value=nextWeekString();
-weekInput.addEventListener('change',loadWeek);
-reloadBtn.addEventListener('click',loadWeek);
-submitBtn.addEventListener('click',submitForm);
-window.addEventListener('beforeunload',e=>{
-  if(child&&!isSaving&&snapshotSelections()!==lastLoadedSnapshot){
-    e.preventDefault();
-    e.returnValue='';
-  }
-});
-window.addEventListener('offline',()=>showSystem('<strong>Keine Internetverbindung.</strong><br>Bitte stellen Sie die Verbindung wieder her, bevor Sie speichern.','error'));
-window.addEventListener('online',()=>{if(child)showSystem('<strong>Internetverbindung wiederhergestellt.</strong>','success')});
-buildWeekGrid();
-loadChild();
+document.getElementById('loginBtn').addEventListener('click',login);document.getElementById('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});document.getElementById('logoutBtn').addEventListener('click',logout);weekInput.addEventListener('change',loadWeek);reloadBtn.addEventListener('click',loadWeek);submitBtn.addEventListener('click',submitForm);document.getElementById('childSelect').addEventListener('change',async e=>{child=children.find(c=>c.child_id===e.target.value)||children[0];document.getElementById('childName').textContent=`${child.first_name} ${child.last_name}`;await loadWeek()});window.addEventListener('beforeunload',e=>{if(child&&!isSaving&&snapshotSelections()!==lastLoadedSnapshot){e.preventDefault();e.returnValue=''}});window.addEventListener('offline',()=>{if(app.style.display!=='none')showSystem('<strong>Keine Internetverbindung.</strong><br>Bitte stellen Sie die Verbindung wieder her, bevor Sie speichern.','error')});window.addEventListener('online',()=>{if(child)showSystem('<strong>Internetverbindung wiederhergestellt.</strong>','success')});
+startApp();
 </script>
 </body>
 </html>
